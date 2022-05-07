@@ -1,5 +1,6 @@
 import time
 from functools import wraps
+
 from logger import log
 
 
@@ -33,10 +34,7 @@ def backoff(
                     return func(*args, **kwargs)
                 except exception_to_catch as e:
                     log.error(
-                        message
-                        + " Повторная попытка через {st} секунд".format(
-                            st=cur_sleep_time
-                        )
+                        message + " Next try in {st} seconds".format(st=cur_sleep_time)
                     )
                     time.sleep(cur_sleep_time)
                     if cur_sleep_time < border_sleep_time:

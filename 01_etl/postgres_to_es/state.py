@@ -1,7 +1,7 @@
 import abc
 import json
-from typing import Any, Optional
 from pathlib import Path
+from typing import Any, Optional
 
 
 class BaseStorage:
@@ -48,13 +48,13 @@ class State:
 
     def __init__(self, storage: JsonFileStorage):
         self.storage = storage
+        self.state_dict = self.storage.retrieve_state()
 
     def set_state(self, key: str, value: Any) -> None:
         """Установить состояние для определённого ключа"""
-        state_dict = {key: value}
-        self.storage.save_state(state_dict)
+        self.state_dict[key] = value
+        self.storage.save_state(self.state_dict)
 
     def get_state(self, key: str) -> Any:
         """Получить состояние по определённому ключу"""
-        state_dict = self.storage.retrieve_state()
-        return state_dict.get(key)
+        return self.state_dict.get(key)

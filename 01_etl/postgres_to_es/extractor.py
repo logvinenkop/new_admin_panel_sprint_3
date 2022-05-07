@@ -1,17 +1,17 @@
-from datetime import datetime
-import psycopg2
-from psycopg2.extras import DictCursor
-from psycopg2 import OperationalError
-from psycopg2 import InterfaceError
 from contextlib import contextmanager
-from dotenv import load_dotenv
-from backoff import backoff
-import pg_sql
+from datetime import datetime
 
+import psycopg2
+from dotenv import load_dotenv
+from psycopg2 import OperationalError
+from psycopg2.extras import DictCursor
+
+import pg_sql
+from backoff import backoff
 
 load_dotenv()
 
-MESSAGE = "Возникла ошибка подключения к БД."
+MESSAGE = "DB connection error."
 
 
 @contextmanager
@@ -27,6 +27,8 @@ def pg_conn_context(dsl: dict):
 
     conn = connect(dsl)
     yield conn
+
+    conn.close()
 
 
 class PgExtractor:
@@ -90,55 +92,3 @@ class PgExtractor:
         """
         batch_data = [dict(row) for row in self.cursor.fetchmany(batch_size)]
         return batch_data
-
-
-# if __name__ == "__main__":
-#     dsl = {
-#         "dbname": os.environ.get("DB_NAME"),
-#         "user": os.environ.get("DB_USER"),
-#         "password": os.environ.get("DB_PASSWORD"),
-#         "host": os.environ.get("DB_HOST"),
-#         "port": os.environ.get("DB_PORT"),
-#     }
-
-#     # sql = "select * from content.film_work limit 10"
-#     with pg_conn_context(dsl) as pg:
-#         extractor = PgExtractor(pg)
-#         last_modified = datetime.fromisoformat("2022-05-05 09:30:18.908524+00:00")
-#         # latest_modified = extractor.get_latest_modified()
-#         log.debug(last_modified)
-#         log.debug(type(last_modified))
-#         to_update = extractor.get_movies_to_update(last_modified)
-#         to_update_tuple = tuple(row["id"] for row in to_update)
-#         log.debug(to_update_tuple)
-#         log.debug(type(to_update_tuple))
-#         extractor.select_movies(to_update_tuple)
-#         while True:
-#             data = extractor.extract_batch()
-#             if not data:
-#                 break
-#             for row in data:
-#                 log.debug(row)
-
-#         extractor.select_data(
-#             pg_sql.PG_SELECT_ALL.format(
-#                 md=datetime.datetime(
-#                     2022, 5, 5, 9, 30, 17, 907877, tzinfo=datetime.timezone.utc
-#                 )
-#             )
-#         )
-#         data = extractor.extract_batch(5)
-#         log.info(type(data[0]))
-#         log.info(data)
-
-#         def prepare_for_es(args: list) -> list:
-#             for row in args:
-#                 cur_state = row.pop("modified")
-#                 log.info(cur_state)
-
-#         prepare_for_es(data)
-#         log.info(data)
-
-# cursor = pg.cursor()
-# cursor.execute(sql)
-# data = [dict(row) for row in cursor.fetchall()]
